@@ -16,7 +16,7 @@ class Config:
         
         # LLM Configuration
         self.LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "google")
-        self.MODEL_NAME: str = os.getenv("MODEL_NAME", "gemini-1.5-flash")
+        self.MODEL_NAME: str = os.getenv("MODEL_NAME", "gemini-1.5-pro")
         self.TEMPERATURE: float = float(os.getenv("TEMPERATURE", "0.1"))
         self.MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "2000"))
         
