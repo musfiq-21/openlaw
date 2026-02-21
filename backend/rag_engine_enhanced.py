@@ -4,20 +4,18 @@ import json
 from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
 
-# LangChain imports
-from langchain.schema import Document
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import Chroma
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+# Moved to langchain_core
+from langchain_core.documents import Document
 
-# Google Gemini imports
-try:
-    import google.generativeai as genai
-    GEMINI_AVAILABLE = True
-except ImportError:
-    GEMINI_AVAILABLE = False
+# Moved to a dedicated partner package
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+# Moved to langchain_community
+from langchain_community.vectorstores import Chroma
 
-# Local imports
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import HumanMessage
+
 from config import config
 
 @dataclass
@@ -53,25 +51,30 @@ class ConstitutionRAG:
                 model_name=config.EMBEDDING_MODEL,
                 model_kwargs={'device': 'cpu'}
             )
-            print(f"✅ Embeddings initialized: {config.EMBEDDING_MODEL}")
+            print(f"Embeddings initialized: {config.EMBEDDING_MODEL}")
         except Exception as e:
-            print(f"❌ Failed to initialize embeddings: {e}")
+            print(f"Failed to initialize embeddings: {e}")
             raise
     
     def _initialize_llm(self):
         """Initialize language model based on configuration"""
-        if self.llm_type == "google" and GEMINI_AVAILABLE and config.GOOGLE_API_KEY:
+        # Check if we are using Google and have an API key
+        if self.llm_type == "google" and config.GOOGLE_API_KEY:
             try:
-                genai.configure(api_key=config.GOOGLE_API_KEY)
-                self.llm = genai.GenerativeModel(config.MODEL_NAME)
-                print(f"✅ Google Gemini initialized: {config.MODEL_NAME}")
+            # In 2026, we pass the key directly or via env variable
+            # LangChain's ChatGoogleGenerativeAI handles the 'genai.configure' internally
+                self.llm = ChatGoogleGenerativeAI(
+                    model=config.MODEL_NAME, # e.g., "gemini-2.0-flash"
+                    google_api_key=config.GOOGLE_API_KEY,
+                    temperature=config.TEMPERATURE,
+                )
+                print(f"Google Gemini initialized via LangChain: {config.MODEL_NAME}")
             except Exception as e:
-                print(f"❌ Failed to initialize Gemini: {e}")
+                print(f"Failed to initialize Gemini: {e}")
                 self.llm = None
         else:
-            print(f"⚠️ LLM provider '{self.llm_type}' not available or not configured")
+            print(f"LLM provider '{self.llm_type}' not available or missing API Key")
             self.llm = None
-    
     def _load_vector_store(self):
         """Load existing vector store if available"""
         if os.path.exists(config.VECTOR_DB_PATH):
@@ -81,12 +84,12 @@ class ConstitutionRAG:
                     embedding_function=self.embeddings,
                     collection_name=config.COLLECTION_NAME
                 )
-                print(f"✅ Vector store loaded from {config.VECTOR_DB_PATH}")
+                print(f"Vector store loaded from {config.VECTOR_DB_PATH}")
             except Exception as e:
-                print(f"❌ Failed to load vector store: {e}")
+                print(f"Failed to load vector store: {e}")
                 self.vectorstore = None
         else:
-            print("⚠️ No existing vector store found. Need to ingest constitution first.")
+            print("No existing vector store found. Need to ingest constitution first.")
             self.vectorstore = None
     
     def _smart_split_constitution(self, text: str) -> List[Document]:
@@ -183,7 +186,7 @@ class ConstitutionRAG:
             documents = self._smart_split_constitution(text)
             
             if not documents:
-                print("❌ No documents created from constitution file")
+                print("No documents created from constitution file")
                 return False
             
             # Create vector store
@@ -194,11 +197,11 @@ class ConstitutionRAG:
                 collection_name=config.COLLECTION_NAME
             )
             
-            print(f"✅ Successfully ingested {len(documents)} documents from constitution")
+            print(f"Successfully ingested {len(documents)} documents from constitution")
             return True
             
         except Exception as e:
-            print(f"❌ Failed to ingest constitution: {e}")
+            print(f"Failed to ingest constitution: {e}")
             return False
     
     def query(self, question: str) -> QueryResult:
@@ -258,7 +261,7 @@ class ConstitutionRAG:
             )
             
         except Exception as e:
-            print(f"❌ Query failed: {e}")
+            print(f"Query failed: {e}")
             return QueryResult(
                 answer=f"An error occurred while processing your query: {str(e)}",
                 sources=[],
@@ -301,7 +304,7 @@ class ConstitutionRAG:
             return response.text
             
         except Exception as e:
-            print(f"❌ Gemini query failed: {e}")
+            print(f"Gemini query failed: {e}")
             return f"Failed to generate answer using Gemini: {str(e)}"
     
     def _fallback_answer(self, question: str, docs: List[Document]) -> str:

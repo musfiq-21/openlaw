@@ -5,22 +5,23 @@ from pydantic import BaseModel
 from typing import List, Dict, Optional
 import os
 import tempfile
+import uvicorn
 
 # Local imports
 from config import config
-from rag_engine_simple import get_simple_rag_engine, QueryResult
+from rag_engine_enhanced import get_rag_engine, QueryResult
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="ConstitutionBD API (Simple)",
-    description="RAG-powered Bangladesh Constitution Query System (Simplified)",
+    title="ConstitutionBD API",
+    description="RAG-powered Bangladesh Constitution Query System",
     version="1.0.0"
 )
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=config.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -45,8 +46,8 @@ class SearchRequest(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str
-    documents_loaded: bool
-    llm_available: bool
+    vector_store_ready: bool
+    llm_provider: str
     message: Optional[str] = None
 
 class IngestResponse(BaseModel):
@@ -62,10 +63,10 @@ async def startup_event():
     """Initialize RAG engine on server startup"""
     global rag
     try:
-        rag = get_simple_rag_engine()
-        print("Simple RAG engine initialized successfully")
+        rag = get_rag_engine()
+        print("✅ RAG engine initialized successfully")
     except Exception as e:
-        print(f"Failed to initialize RAG engine: {e}")
+        print(f"❌ Failed to initialize RAG engine: {e}")
         rag = None
 
 def get_rag():
@@ -78,7 +79,7 @@ def get_rag():
 async def root():
     """Root endpoint with API information"""
     return {
-        "message": "ConstitutionBD API (Simple) - RAG-powered Bangladesh Constitution Query System",
+        "message": "ConstitutionBD API - RAG-powered Bangladesh Constitution Query System",
         "version": "1.0.0",
         "endpoints": {
             "health": "/health",
@@ -95,26 +96,31 @@ async def root():
 async def health_check(rag_engine=Depends(get_rag)):
     """Check system health and status"""
     try:
-        documents_loaded = len(rag_engine.documents) > 0
-        llm_available = rag_engine.llm_available
+        vector_store_ready = rag_engine.vectorstore is not None
         
-        if documents_loaded:
-            message = "All systems operational"
+        # Test vector store with a simple query if available
+        if vector_store_ready:
+            try:
+                test_results = rag_engine.vectorstore.similarity_search("test", k=1)
+                message = "All systems operational"
+            except Exception as e:
+                vector_store_ready = False
+                message = f"Vector store error: {str(e)}"
         else:
-            message = "Documents not loaded - need to ingest constitution"
+            message = "Vector store not initialized - need to ingest constitution"
         
         return HealthResponse(
-            status="healthy" if documents_loaded else "degraded",
-            documents_loaded=documents_loaded,
-            llm_available=llm_available,
+            status="healthy" if vector_store_ready else "degraded",
+            vector_store_ready=vector_store_ready,
+            llm_provider=config.LLM_PROVIDER,
             message=message
         )
         
     except Exception as e:
         return HealthResponse(
             status="unhealthy",
-            documents_loaded=False,
-            llm_available=False,
+            vector_store_ready=False,
+            llm_provider=config.LLM_PROVIDER,
             message=f"Health check failed: {str(e)}"
         )
 
@@ -143,7 +149,7 @@ async def query_constitution(request: QueryRequest, rag_engine=Depends(get_rag))
 
 @app.post("/search")
 async def search_articles(request: SearchRequest, rag_engine=Depends(get_rag)):
-    """Search for similar articles using keyword search"""
+    """Search for similar articles using semantic search"""
     if not request.query.strip():
         raise HTTPException(status_code=400, detail="Search query cannot be empty")
     
@@ -181,7 +187,8 @@ async def ingest_constitution(file: UploadFile = File(...), rag_engine=Depends(g
             success = rag_engine.ingest_constitution(temp_file_path)
             
             if success:
-                doc_count = len(rag_engine.documents)
+                # Count processed documents (approximate)
+                doc_count = len(rag_engine.article_index) if rag_engine.article_index else 0
                 
                 return IngestResponse(
                     success=True,
@@ -214,7 +221,7 @@ async def ingest_from_path(file_path: str, rag_engine=Depends(get_rag)):
         success = rag_engine.ingest_constitution(file_path)
         
         if success:
-            doc_count = len(rag_engine.documents)
+            doc_count = len(rag_engine.article_index) if rag_engine.article_index else 0
             
             return IngestResponse(
                 success=True,
@@ -230,16 +237,31 @@ async def ingest_from_path(file_path: str, rag_engine=Depends(get_rag)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ingestion failed: {str(e)}")
 
+@app.get("/compare")
+async def compare_with_chatgpt(question: str, rag_engine=Depends(get_rag)):
+    """Compare our system with ChatGPT (demonstration endpoint)"""
+    if not question.strip():
+        raise HTTPException(status_code=400, detail="Question cannot be empty")
+    
+    try:
+        comparison = rag_engine.compare_with_chatgpt(question)
+        return comparison
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Comparison failed: {str(e)}")
+
 @app.get("/stats")
 async def get_system_stats(rag_engine=Depends(get_rag)):
     """Get system statistics"""
     try:
         stats = {
-            "documents_loaded": len(rag_engine.documents),
-            "articles_indexed": len(rag_engine.article_index),
-            "llm_available": rag_engine.llm_available,
+            "vector_store_ready": rag_engine.vectorstore is not None,
             "llm_provider": config.LLM_PROVIDER,
-            "storage_type": "JSON file storage"
+            "embedding_model": config.EMBEDDING_MODEL,
+            "articles_indexed": len(rag_engine.article_index) if rag_engine.article_index else 0,
+            "chunk_size": config.CHUNK_SIZE,
+            "top_k_results": config.TOP_K_RESULTS,
+            "vector_db_path": config.VECTOR_DB_PATH
         }
         
         return stats
@@ -263,11 +285,10 @@ async def general_exception_handler(request, exc):
     )
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(
-        "app_simple:app",
-        host="0.0.0.0",
-        port=8000,
+        "app:app",
+        host=config.HOST,
+        port=config.PORT,
         reload=True,
         log_level="info"
     )

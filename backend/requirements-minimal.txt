@@ -1,0 +1,13 @@
+# Core FastAPI only
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Configuration
+python-dotenv==1.0.0
+
+# Google Gemini only
+google-generativeai>=0.3.0
+
+# Basic utilities
+numpy>=1.20.0
