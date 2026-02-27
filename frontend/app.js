@@ -6,66 +6,47 @@ const API_BASE = 'http://localhost:8000';
 // Language strings
 const strings = {
     bn: {
-        headerSubtitle: 'বাংলাদেশ সংবিধান সম্পর্কে প্রশ্ন করুন',
-        inputPlaceholder: 'সংবিধান সম্পর্কে আপনার প্রশ্ন লিখুন...',
-        welcomeMsg: '👋 স্বাগতম ConstitutionBD চ্যাটে! আমি বাংলাদেশ সংবিধান সম্পর্কে আপনার প্রশ্নের উত্তর দিতে পারি। যেকোনো প্রশ্ন করুন!',
-        connectionError: 'সার্ভার সংযুক্ত নয়। নিশ্চিত করুন ব্যাকএন্ড চলছে। (http://localhost:8000)',
+        headerSubtitle: 'আইনি জ্ঞান সহজে অ্যাক্সেসযোগ্য',
+        inputPlaceholder: 'আইন বা সংবিধান সম্পর্কে প্রশ্ন করুন...',
+        sendBtnTitle: 'কিছু জিজ্ঞাসা করুন',
+        welcomeMsg: 'স্বাগতম OpenLaw চ্যাটে! আমি সংবিধান এবং আইনি বিষয়ে প্রশ্নের উত্তর দিতে পারি। যেকোনো প্রশ্ন করুন!',
+        connectionError: 'সার্ভার সংযুক্ত নয়। নিশ্চিত করুন ব্যাকএন্ড চলছে।',
         answerError: 'উত্তর পাওয়া যায়নি',
         apiError: 'API ত্রুটি',
         sources: '📚 উৎস:',
         moreSource: '+ আরও',
         settingsTitle: '⚙️ সেটিংস',
-        langLabel: 'ভাষা / Language',
+        langLabel: 'ভাষা',
         langInfo: 'চ্যাট এবং ইউআই এর ভাষা পরিবর্তন করুন',
-        themeLabel: 'ডার্ক মোড / Dark Mode',
+        themeLabel: 'ডার্ক মোড',
         themeOn: 'চালু',
         themeOff: 'অফ',
         themeInfo: 'চোখে আরামদায়ক ডার্ক থিম ব্যবহার করুন',
-        fontLabel: 'টেক্সট সাইজ / Font Size',
-        fontInfo: 'চ্যাটের টেক্সট আকার পরিবর্তন করুন',
-        scrollLabel: 'স্বয়ংক্রিয় স্ক্রল / Auto Scroll',
-        scrollStatus: 'চালু',
-        scrollInfo: 'নতুন বার্তায় স্বয়ংক্রিয়ভাবে নীচে স্ক্রল করুন',
-        sourcesLabel: 'উৎস দেখান / Show Sources',
-        sourcesStatus: 'চালু',
-        sourcesInfo: 'প্রতিটি উত্তরের সাথে সংবিধানের উৎস দেখান',
-        aboutLabel: 'বিষয়ে / About',
     },
     en: {
-        headerSubtitle: 'Ask questions about Bangladesh Constitution',
-        inputPlaceholder: 'Ask your question about the constitution...',
-        welcomeMsg: '👋 Welcome to ConstitutionBD Chat! I can help answer your questions about the Bangladesh Constitution. Ask anything!',
-        connectionError: 'Server not connected. Make sure the backend is running. (http://localhost:8000)',
+        headerSubtitle: 'Legal Knowledge Made Easy',
+        inputPlaceholder: 'Ask questions about laws or constitution...',
+        sendBtnTitle: 'Ask something',
+        welcomeMsg: 'Welcome to OpenLaw Chat! I can help answer your questions about constitution and legal matters. Ask anything!',
+        connectionError: 'Server not connected. Make sure the backend is running.',
         answerError: 'No answer found',
         apiError: 'API Error',
         sources: '📚 Sources:',
         moreSource: '+ More',
         settingsTitle: '⚙️ Settings',
-        langLabel: 'Language / ভাষা',
+        langLabel: 'Language',
         langInfo: 'Change the language of chat and UI',
-        themeLabel: 'Dark Mode / ডার্ক মোড',
+        themeLabel: 'Dark Mode',
         themeOn: 'On',
         themeOff: 'Off',
         themeInfo: 'Use eye-friendly dark theme',
-        fontLabel: 'Font Size / টেক্সট সাইজ',
-        fontInfo: 'Change the text size in chat',
-        scrollLabel: 'Auto Scroll / স্বয়ংক্রিয় স্ক্রল',
-        scrollStatus: 'On',
-        scrollInfo: 'Automatically scroll down on new messages',
-        sourcesLabel: 'Show Sources / উৎস দেখান',
-        sourcesStatus: 'On',
-        sourcesInfo: 'Show constitution sources with each answer',
-        aboutLabel: 'About / বিষয়ে',
     }
 };
 
 // Settings state
 const settings = {
     language: 'bn',
-    darkMode: false,
-    fontSize: 'medium',
-    autoScroll: true,
-    showSources: true
+    darkMode: false
 };
 
 // DOM Elements
@@ -74,11 +55,8 @@ const messageInput = document.getElementById('message-input');
 const sendBtn = document.getElementById('send-btn');
 const inputForm = document.getElementById('input-form');
 const settingsPanel = document.getElementById('settings-panel');
-const darkModeToggle = document.getElementById('dark-mode-toggle');
 const languageSelect = document.getElementById('language-select');
-const fontSizeSelect = document.getElementById('font-size-select');
-const autoScrollToggle = document.getElementById('auto-scroll-toggle');
-const showSourcesToggle = document.getElementById('show-sources-toggle');
+const darkModeToggle = document.getElementById('dark-mode-toggle');
 
 // State
 let isLoading = false;
@@ -150,6 +128,8 @@ function changeLanguage(lang) {
     saveSettings();
     updateUIText();
     updateMessageInputPlaceholder();
+    updateSendBtnTitle();
+    updateThemeStatus();
 }
 
 function toggleDarkMode() {
@@ -159,65 +139,38 @@ function toggleDarkMode() {
     updateThemeStatus();
 }
 
-function changeFontSize(size) {
-    settings.fontSize = size;
-    saveSettings();
-    applyFontSize();
-}
-
-function toggleAutoScroll() {
-    settings.autoScroll = autoScrollToggle.checked;
-    saveSettings();
-    updateAutoScrollStatus();
-}
-
-function toggleShowSources() {
-    settings.showSources = showSourcesToggle.checked;
-    saveSettings();
-    updateSourcesStatus();
-}
 
 function applySettings() {
     // Apply dark mode
     darkModeToggle.checked = settings.darkMode;
     applyDarkMode();
 
-    // Apply font size
-    fontSizeSelect.value = settings.fontSize;
-    applyFontSize();
-
     // Apply language
     languageSelect.value = settings.language;
     updateUIText();
     updateMessageInputPlaceholder();
+    updateSendBtnTitle();
 
-    // Apply auto scroll and sources toggles
-    autoScrollToggle.checked = settings.autoScroll;
-    showSourcesToggle.checked = settings.showSources;
-    updateAutoScrollStatus();
-    updateSourcesStatus();
+    // Update theme status
     updateThemeStatus();
 }
 
 function updateUIText() {
     const str = strings[settings.language];
-    document.getElementById('header-subtitle').textContent = str.headerSubtitle;
     document.getElementById('settings-title').textContent = str.settingsTitle;
     document.getElementById('lang-label').textContent = str.langLabel;
     document.getElementById('lang-info').textContent = str.langInfo;
     document.getElementById('theme-label').textContent = str.themeLabel;
     document.getElementById('theme-info').textContent = str.themeInfo;
-    document.getElementById('font-label').textContent = str.fontLabel;
-    document.getElementById('font-info').textContent = str.fontInfo;
-    document.getElementById('scroll-label').textContent = str.scrollLabel;
-    document.getElementById('scroll-info').textContent = str.scrollInfo;
-    document.getElementById('sources-label').textContent = str.sourcesLabel;
-    document.getElementById('sources-info').textContent = str.sourcesInfo;
-    document.getElementById('about-label').textContent = str.aboutLabel;
 }
 
 function updateMessageInputPlaceholder() {
     messageInput.placeholder = strings[settings.language].inputPlaceholder;
+}
+
+function updateSendBtnTitle() {
+    const sendBtn = document.getElementById('send-btn');
+    sendBtn.title = strings[settings.language].sendBtnTitle;
 }
 
 function applyDarkMode() {
@@ -228,32 +181,13 @@ function applyDarkMode() {
     }
 }
 
-function applyFontSize() {
-    const sizes = {
-        small: '13px',
-        medium: '15px',
-        large: '17px'
-    };
-    messagesContainer.style.fontSize = sizes[settings.fontSize];
-}
-
 function updateThemeStatus() {
     document.getElementById('theme-status').textContent = settings.darkMode 
         ? strings[settings.language].themeOn 
         : strings[settings.language].themeOff;
 }
 
-function updateAutoScrollStatus() {
-    document.getElementById('scroll-status').textContent = settings.autoScroll 
-        ? strings[settings.language].scrollStatus 
-        : 'বন্ধ';
-}
 
-function updateSourcesStatus() {
-    document.getElementById('sources-status').textContent = settings.showSources 
-        ? strings[settings.language].sourcesStatus 
-        : 'বন্ধ';
-}
 
 async function handleSendMessage(e) {
     e.preventDefault();
@@ -297,7 +231,7 @@ async function handleSendMessage(e) {
         
         // Add response with sources
         if (data.answer) {
-            addMessage('assistant', data.answer, settings.showSources ? data.sources : null);
+            addMessage('assistant', data.answer, data.sources);
         } else {
             addErrorMessage(strings[settings.language].answerError);
         }
@@ -322,8 +256,8 @@ function addMessage(role, content, sources) {
     
     messageDiv.appendChild(contentDiv);
     
-    // Add sources if present and enabled
-    if (sources && sources.length > 0 && settings.showSources) {
+    // Add sources if present
+    if (sources && sources.length > 0) {
         const sourcesDiv = document.createElement('div');
         sourcesDiv.className = 'sources';
         
@@ -340,10 +274,7 @@ function addMessage(role, content, sources) {
     }
     
     messagesContainer.appendChild(messageDiv);
-    
-    if (settings.autoScroll) {
-        scrollToBottom();
-    }
+    scrollToBottom();
 }
 
 function addErrorMessage(text) {
@@ -351,10 +282,7 @@ function addErrorMessage(text) {
     errorDiv.className = 'error-message';
     errorDiv.innerHTML = `<i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>${text}`;
     messagesContainer.appendChild(errorDiv);
-    
-    if (settings.autoScroll) {
-        scrollToBottom();
-    }
+    scrollToBottom();
 }
 
 function removeLastMessage() {
@@ -367,7 +295,7 @@ function updateSendButton() {
     sendBtn.disabled = isLoading;
     sendBtn.innerHTML = isLoading 
         ? '<div class="loading-spinner" style="border-width: 2px; width: 16px; height: 16px;"></div>'
-        : '<i class="fas fa-paper-plane"></i>';
+        : '↑';
 }
 
 function scrollToBottom() {
