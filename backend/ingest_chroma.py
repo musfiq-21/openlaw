@@ -3,7 +3,7 @@ Script to ingest constitution_docs.json into ChromaDB using LangChain.
 """
 import os
 import json
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from config import config
