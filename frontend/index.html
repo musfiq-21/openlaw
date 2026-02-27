@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenLaw</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #0084ff;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7f7f7;
+            --text-primary: #000000;
+            --text-secondary: #666666;
+            --border-color: #e5e5e5;
+            --user-bubble: #0084ff;
+            --user-text: #ffffff;
+            --assistant-bubble: #e5e5ea;
+            --assistant-text: #000000;
+        }
+
+        body.dark-mode {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --border-color: #404040;
+            --user-bubble: #0084ff;
+            --assistant-bubble: #3a3a3a;
+            --assistant-text: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            height: 100vh;
+            overflow: hidden;
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: linear-gradient(to bottom, var(--bg-secondary), var(--bg-primary));
+        }
+
+        #chat-header {
+            padding: 16px;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        #chat-header-title {
+            text-align: center;
+            flex: 1;
+        }
+
+        #chat-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        #chat-header p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin: 4px 0 0 0;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background: var(--border-color);
+        }
+
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 20px;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 16px;
+            animation: slideIn 0.3s ease-in;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.assistant {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            line-height: 1.4;
+            font-size: 15px;
+        }
+
+        .message.user .message-content {
+            background: var(--user-bubble);
+            color: var(--user-text);
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-content {
+            background: var(--assistant-bubble);
+            color: var(--assistant-text);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.assistant .message-content a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .message.assistant .message-content a:hover {
+            text-decoration: underline;
+        }
+
+        .sources {
+            max-width: 70%;
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 132, 255, 0.2);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #input-area {
+            padding: 16px;
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        #input-form {
+            display: flex;
+            gap: 8px;
+        }
+
+        #message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            font-size: 15px;
+            outline: none;
+            font-family: inherit;
+            resize: none;
+            max-height: 100px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        #message-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.1);
+        }
+
+        #message-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        #send-btn {
+            padding: 12px 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 48px;
+            height: 48px;
+        }
+
+        #send-btn:hover:not(:disabled) {
+            background: #0073e6;
+            box-shadow: 0 2px 8px rgba(0, 132, 255, 0.3);
+        }
+
+        #send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            background: #ffe5e5;
+            color: #c00;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        /* Settings Panel */
+        #settings-panel {
+            position: fixed;
+            right: -350px;
+            top: 0;
+            width: 350px;
+            height: 100vh;
+            background: var(--bg-primary);
+            border-left: 1px solid var(--border-color);
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            overflow-y: auto;
+            transition: right 0.3s ease;
+        }
+
+        #settings-panel.open {
+            right: 0;
+        }
+
+        .settings-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .settings-header h2 {
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .settings-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .settings-content {
+            padding: 16px;
+        }
+
+        .setting-group {
+            margin-bottom: 20px;
+        }
+
+        .setting-label {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: block;
+            color: var(--text-primary);
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .setting-info {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .settings-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 16px 0;
+        }
+
+        #messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #messages::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        #messages::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        @media (max-width: 640px) {
+            .message-content {
+                max-width: 85%;
+            }
+
+            .sources {
+                max-width: 85%;
+            }
+
+            #message-input {
+                font-size: 16px;
+            }
+
+            #settings-panel {
+                width: 100%;
+                right: -100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-header">
+            <div id="chat-header-title">
+                <h1>🏛️ ConstitutionBD</h1>
+                <p id="header-subtitle">বাংলাদেশ সংবিধান সম্পর্কে প্রশ্ন করুন</p>
+            </div>
+            <div class="header-buttons">
+                <button class="icon-btn" onclick="toggleSettings()" title="সেটিংস">
+                    <i class="fas fa-sliders-h"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="messages"></div>
+
+        <div id="input-area">
+            <form id="input-form">
+                <textarea
+                    id="message-input"
+                    placeholder="সংবিধান সম্পর্কে আপনার প্রশ্ন লিখুন..."
+                    rows="1"
+                ></textarea>
+                <button type="submit" id="send-btn" title="প্রশ্ন জমা দিন">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div id="settings-panel">
+        <div class="settings-header">
+            <h2 id="settings-title">⚙️ সেটিংস</h2>
+            <button class="settings-close" onclick="toggleSettings()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="settings-content">
+            <!-- Language Setting -->
+            <div class="setting-group">
+                <label class="setting-label" id="lang-label">ভাষা / Language</label>
+                <select id="language-select" onchange="changeLanguage(this.value)">
+                    <option value="bn">বাংলা (Bangla)</option>
+                    <option value="en">English</option>
+                </select>
+                <div class="setting-info" id="lang-info">চ্যাট এবং ইউআই এর ভাষা পরিবর্তন করুন</div>
+            </div>
+
+            <!-- Dark Mode -->
+            <div class="setting-group">
+                <label class="setting-label" id="theme-label">ডার্ক মোড / Dark Mode</label>
+                <div class="toggle-switch">
+                    <label class="switch">
+                        <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode()">
+                        <span class="slider"></span>
+                    </label>
+                    <span id="theme-status">অফ</span>
+                </div>
+                <div class="setting-info" id="theme-info">চোখে আরামদায়ক ডার্ক থিম ব্যবহার করুন</div>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <!-- Font Size -->
+            <div class="setting-group">
+                <label class="setting-label" id="font-label">টেক্সট সাইজ / Font Size</label>
+                <select id="font-size-select" onchange="changeFontSize(this.value)">
+                    <option value="small">ছোট (Small)</option>
+                    <option value="medium" selected>মাঝারি (Medium)</option>
+                    <option value="large">বড় (Large)</option>
+                </select>
+                <div class="setting-info" id="font-info">চ্যাটের টেক্সট আকার পরিবর্তন করুন</div>
+            </div>
+
+            <!-- Auto Scroll -->
+            <div class="setting-group">
+                <label class="setting-label" id="scroll-label">স্বয়ংক্রিয় স্ক্রল / Auto Scroll</label>
+                <div class="toggle-switch">
+                    <label class="switch">
+                        <input type="checkbox" id="auto-scroll-toggle" checked onchange="toggleAutoScroll()">
+                        <span class="slider"></span>
+                    </label>
+                    <span id="scroll-status">চালু</span>
+                </div>
+                <div class="setting-info" id="scroll-info">নতুন বার্তায় স্বয়ংক্রিয়ভাবে নীচে স্ক্রল করুন</div>
+            </div>
+
+            <!-- Show Sources -->
+            <div class="setting-group">
+                <label class="setting-label" id="sources-label">উৎস দেখান / Show Sources</label>
+                <div class="toggle-switch">
+                    <label class="switch">
+                        <input type="checkbox" id="show-sources-toggle" checked onchange="toggleShowSources()">
+                        <span class="slider"></span>
+                    </label>
+                    <span id="sources-status">চালু</span>
+                </div>
+                <div class="setting-info" id="sources-info">প্রতিটি উত্তরের সাথে সংবিধানের উৎস দেখান</div>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="setting-group">
+                <label class="setting-label" id="about-label">বিষয়ে / About</label>
+                <div class="setting-info">
+                    <strong>ConstitutionBD v1.0</strong><br>
+                    বাংলাদেশ সংবিধান সম্পর্কে প্রশ্নের উত্তর দিতে AI ব্যবহার করে। <br><br>
+                    <strong>RAG প্রযুক্তি ব্যবহার করে তৈরি</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
