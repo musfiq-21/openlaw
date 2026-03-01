@@ -12,7 +12,7 @@ def debug_search():
     print(f"Articles indexed: {len(rag.article_index)}")
     
     if len(rag.documents) == 0:
-        print("❌ No documents loaded - checking file path...")
+        print("No documents loaded - checking file path...")
         possible_paths = [
             "./constitution_docs.json",
             "backend/constitution_docs.json",
@@ -20,11 +20,11 @@ def debug_search():
         ]
         for path in possible_paths:
             if os.path.exists(path):
-                print(f"✅ Found at: {path}")
+                print(f"Found at: {path}")
             else:
-                print(f"❌ Not found: {path}")
+                print(f"Not found: {path}")
     else:
-        print("✅ Documents loaded successfully")
+        print("Documents loaded successfully")
         
         # Test search
         query = "fundamental rights"

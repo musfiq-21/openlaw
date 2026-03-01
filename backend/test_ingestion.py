@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 from rag_engine_simple import get_simple_rag_engine
 
 def test_ingestion():
@@ -17,7 +15,6 @@ def test_ingestion():
             content_length = len(doc.page_content)
             print(f'{i+1}. {article_name} - {content_length} chars')
     
-    # Test a few specific articles
     print('\nSample articles in index:')
     article_keys = list(rag.article_index.keys())[:5]
     for key in article_keys:

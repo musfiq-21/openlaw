@@ -6,18 +6,15 @@ from typing import List, Dict, Optional
 import os
 import tempfile
 
-# Local imports
 from config import config
 from rag_engine_simple import get_simple_rag_engine, QueryResult
 
-# Initialize FastAPI app
 app = FastAPI(
     title="ConstitutionBD API (Simple)",
     description="RAG-powered Bangladesh Constitution Query System (Simplified)",
     version="1.0.0"
 )
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,7 +23,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Pydantic Models
 class QueryRequest(BaseModel):
     question: str
     include_sources: bool = True
@@ -54,7 +50,6 @@ class IngestResponse(BaseModel):
     message: str
     documents_processed: Optional[int] = None
 
-# Global RAG engine instance
 rag = None
 
 @app.on_event("startup")
@@ -165,19 +160,16 @@ async def search_articles(request: SearchRequest, rag_engine=Depends(get_rag)):
 @app.post("/ingest", response_model=IngestResponse)
 async def ingest_constitution(file: UploadFile = File(...), rag_engine=Depends(get_rag)):
     """Ingest constitution from uploaded file"""
-    # Validate file type
     if not file.filename.endswith('.txt'):
         raise HTTPException(status_code=400, detail="Only .txt files are supported")
     
     try:
-        # Save uploaded file temporarily
         with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.txt') as temp_file:
             content = await file.read()
             temp_file.write(content)
             temp_file_path = temp_file.name
         
         try:
-            # Ingest the file
             success = rag_engine.ingest_constitution(temp_file_path)
             
             if success:
@@ -195,7 +187,6 @@ async def ingest_constitution(file: UploadFile = File(...), rag_engine=Depends(g
                 )
                 
         finally:
-            # Clean up temporary file
             os.unlink(temp_file_path)
             
     except Exception as e:
@@ -247,7 +238,6 @@ async def get_system_stats(rag_engine=Depends(get_rag)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
 
-# Exception handlers
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
     return JSONResponse(

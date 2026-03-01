@@ -7,18 +7,15 @@ import os
 import tempfile
 import uvicorn
 
-# Local imports
 from config import config
 from rag_engine_enhanced import get_rag_engine, QueryResult
 
-# Initialize FastAPI app
 app = FastAPI(
     title="ConstitutionBD API",
     description="RAG-powered Bangladesh Constitution Query System",
     version="1.0.0"
 )
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=config.ALLOWED_ORIGINS,
@@ -27,7 +24,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Pydantic Models
 class QueryRequest(BaseModel):
     question: str
     include_sources: bool = True
@@ -55,7 +51,6 @@ class IngestResponse(BaseModel):
     message: str
     documents_processed: Optional[int] = None
 
-# Global RAG engine instance
 rag = None
 
 @app.on_event("startup")
@@ -64,9 +59,9 @@ async def startup_event():
     global rag
     try:
         rag = get_rag_engine()
-        print("✅ RAG engine initialized successfully")
+        print("RAG engine initialized successfully")
     except Exception as e:
-        print(f"❌ Failed to initialize RAG engine: {e}")
+        print(f"Failed to initialize RAG engine: {e}")
         rag = None
 
 def get_rag():

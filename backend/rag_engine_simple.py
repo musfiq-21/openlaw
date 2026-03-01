@@ -37,16 +37,16 @@ class SimpleConstitutionRAG:
                 genai.configure(api_key=config.GOOGLE_API_KEY)
                 self.llm = genai.GenerativeModel(config.MODEL_NAME)
                 self.llm_available = True
-                print(f"✅ Google Gemini initialized: {config.MODEL_NAME}")
+                print(f"Google Gemini initialized: {config.MODEL_NAME}")
             else:
                 self.llm = None
-                print("⚠️ Google Gemini API key not configured")
+                print("Google Gemini API key not configured")
         except ImportError:
             self.llm = None
-            print("⚠️ Google Generative AI not installed")
+            print("Google Generative AI not installed")
         except Exception as e:
             self.llm = None
-            print(f"⚠️ Failed to initialize Gemini: {e}")
+            print(f"Failed to initialize Gemini: {e}")
         
         # Load existing documents if available
         self._load_documents()
@@ -63,11 +63,11 @@ class SimpleConstitutionRAG:
                     data = json.load(f)
                     self.documents = [SimpleDocument(**doc) for doc in data.get('documents', [])]
                     self.article_index = data.get('article_index', {})
-                print(f"✅ Loaded {len(self.documents)} documents from storage")
+                print(f"Loaded {len(self.documents)} documents from storage")
             except Exception as e:
-                print(f"⚠️ Failed to load documents: {e}")
+                print(f"!Failed to load documents: {e}")
         else:
-            print(f"⚠️ No constitution documents found at: {storage_path}")
+            print(f"!No constitution documents found at: {storage_path}")
     
     def _save_documents(self):
         """Save documents to storage"""
@@ -86,9 +86,9 @@ class SimpleConstitutionRAG:
             }
             with open(storage_path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
-            print(f"✅ Saved {len(self.documents)} documents to storage")
+            print(f"Saved {len(self.documents)} documents to storage")
         except Exception as e:
-            print(f"⚠️ Failed to save documents: {e}")
+            print(f"!Failed to save documents: {e}")
     
     def _simple_split_constitution(self, text: str) -> List[SimpleDocument]:
         """Improved splitting that properly handles constitution format"""
@@ -287,18 +287,18 @@ class SimpleConstitutionRAG:
             # Save to storage
             self._save_documents()
             
-            print(f"✅ Successfully ingested {len(self.documents)} documents from constitution")
-            print(f"📚 Articles indexed: {len(self.article_index)}")
+            print(f"Successfully ingested {len(self.documents)} documents from constitution")
+            print(f"Articles indexed: {len(self.article_index)}")
             
             # Print sample of what was created
             if len(self.documents) > 0:
-                print(f"📄 First document: {self.documents[0].metadata.get('article', 'Unknown')}")
-                print(f"📄 Sample content length: {len(self.documents[0].page_content)} characters")
+                print(f"First document: {self.documents[0].metadata.get('article', 'Unknown')}")
+                print(f"Sample content length: {len(self.documents[0].page_content)} characters")
             
             return True
             
         except Exception as e:
-            print(f"❌ Failed to ingest constitution: {e}")
+            print(f"Failed to ingest constitution: {e}")
             return False
     
     def _simple_keyword_search(self, question: str, k: int = 5) -> List[SimpleDocument]:
@@ -375,7 +375,7 @@ class SimpleConstitutionRAG:
             )
             
         except Exception as e:
-            print(f"❌ Query failed: {e}")
+            print(f"!Query failed: {e}")
             return QueryResult(
                 answer=f"An error occurred while processing your query: {str(e)}",
                 sources=[],
@@ -411,7 +411,7 @@ class SimpleConstitutionRAG:
             return response.text
             
         except Exception as e:
-            print(f"❌ Gemini query failed: {e}")
+            print(f"!Gemini query failed: {e}")
             return f"Failed to generate answer using Gemini: {str(e)}"
     
     def _fallback_answer(self, question: str, docs: List[SimpleDocument]) -> str:
@@ -464,7 +464,7 @@ ANSWER:"""
             return results
             
         except Exception as e:
-            print(f"❌ Search failed: {e}")
+            print(f"!Search failed: {e}")
             return []
 
 # Singleton instance
