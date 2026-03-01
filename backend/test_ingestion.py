@@ -15,7 +15,7 @@ def test_ingestion():
             content_length = len(doc.page_content)
             print(f'{i+1}. {article_name} - {content_length} chars')
     
-    print('\nSample articles in index:')
+    print('\nSample articles in index ')
     article_keys = list(rag.article_index.keys())[:5]
     for key in article_keys:
         content = rag.article_index[key]

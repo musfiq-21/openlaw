@@ -74,6 +74,7 @@ class SimpleConstitutionRAG:
         # Get the directory where this script is located
         script_dir = os.path.dirname(os.path.abspath(__file__))
         storage_path = os.path.join(script_dir, "constitution_docs.json")
+        print("Saving documents to storage...")
         try:
             data = {
                 'documents': [
