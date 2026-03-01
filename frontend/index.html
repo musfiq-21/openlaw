@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,7 +15,7 @@
                 <h1><span class="logo-icon"><img src="logo.svg" alt="OpenLaw Logo"></span>OpenLaw</h1>
             </div>
             <div class="header-buttons">
-                <button class="icon-btn" onclick="toggleSettings()" title="সেটিংস">
+                <button class="icon-btn" onclick="toggleSettings()" title="Settings">
                     <i class="fas fa-sliders-h"></i>
                 </button>
             </div>
@@ -41,37 +41,24 @@
     <!-- Settings Panel -->
     <div id="settings-panel">
         <div class="settings-header">
-            <h2 id="settings-title">⚙️ সেটিংস</h2>
+            <h2 id="settings-title">⚙️ Settings</h2>
             <button class="settings-close" onclick="toggleSettings()" title="Close settings">
                 <i class="fas fa-times"></i>
             </button>
         </div>
 
         <div class="settings-content">
-            <!-- Language Setting -->
-            <div class="setting-group">
-                <label class="setting-label" id="lang-label">ভাষা / Language</label>
-                <select id="language-select" onchange="changeLanguage(this.value)" title="Select language">
-                    <option value="bn">🇧🇩 বাংলা (Bangla)</option>
-                    <option value="en">🇺🇸 English</option>
-            
-                </select>
-                <div class="setting-info" id="lang-info">চ্যাট এবং ইউআই এর ভাষা পরিবর্তন করুন</div>
-            </div>
-
-            <div class="settings-divider"></div>
-
             <!-- Dark Mode -->
             <div class="setting-group">
-                <label class="setting-label" id="theme-label">ডার্ক মোড / Dark Mode</label>
+                <label class="setting-label" id="theme-label">Dark Mode</label>
                 <div class="toggle-switch">
                     <label class="switch">
                         <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode()" title="Toggle dark mode">
                         <span class="slider"></span>
                     </label>
-                    <span id="theme-status">অফ</span>
+                    <span id="theme-status">Off</span>
                 </div>
-                <div class="setting-info" id="theme-info">চোখে আরামদায়ক ডার্ক থিম ব্যবহার করুন</div>
+                <div class="setting-info" id="theme-info">Use dark theme for comfortable viewing</div>
             </div>
         </div>
     </div>

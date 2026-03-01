@@ -5,24 +5,6 @@ const API_BASE = 'http://localhost:8000';
 
 // Language strings
 const strings = {
-    bn: {
-        headerSubtitle: 'আইনি জ্ঞান সহজে অ্যাক্সেসযোগ্য',
-        inputPlaceholder: 'আইন বা সংবিধান সম্পর্কে প্রশ্ন করুন...',
-        sendBtnTitle: 'কিছু জিজ্ঞাসা করুন',
-        welcomeMsg: 'স্বাগতম OpenLaw চ্যাটে! আমি সংবিধান এবং আইনি বিষয়ে প্রশ্নের উত্তর দিতে পারি। যেকোনো প্রশ্ন করুন!',
-        connectionError: 'সার্ভার সংযুক্ত নয়। নিশ্চিত করুন ব্যাকএন্ড চলছে।',
-        answerError: 'উত্তর পাওয়া যায়নি',
-        apiError: 'API ত্রুটি',
-        sources: '📚 উৎস:',
-        moreSource: '+ আরও',
-        settingsTitle: '⚙️ সেটিংস',
-        langLabel: 'ভাষা',
-        langInfo: 'চ্যাট এবং ইউআই এর ভাষা পরিবর্তন করুন',
-        themeLabel: 'ডার্ক মোড',
-        themeOn: 'চালু',
-        themeOff: 'অফ',
-        themeInfo: 'চোখে আরামদায়ক ডার্ক থিম ব্যবহার করুন',
-    },
     en: {
         headerSubtitle: 'Legal Knowledge Made Easy',
         inputPlaceholder: 'Ask questions about laws or constitution...',
@@ -45,7 +27,7 @@ const strings = {
 
 // Settings state
 const settings = {
-    language: 'bn',
+    language: 'en',
     darkMode: false
 };
 
@@ -55,7 +37,6 @@ const messageInput = document.getElementById('message-input');
 const sendBtn = document.getElementById('send-btn');
 const inputForm = document.getElementById('input-form');
 const settingsPanel = document.getElementById('settings-panel');
-const languageSelect = document.getElementById('language-select');
 const darkModeToggle = document.getElementById('dark-mode-toggle');
 
 // State
@@ -123,14 +104,7 @@ function toggleSettings() {
     settingsPanel.classList.toggle('open');
 }
 
-function changeLanguage(lang) {
-    settings.language = lang;
-    saveSettings();
-    updateUIText();
-    updateMessageInputPlaceholder();
-    updateSendBtnTitle();
-    updateThemeStatus();
-}
+// Language change function removed - English only
 
 function toggleDarkMode() {
     settings.darkMode = darkModeToggle.checked;
@@ -145,12 +119,6 @@ function applySettings() {
     darkModeToggle.checked = settings.darkMode;
     applyDarkMode();
 
-    // Apply language
-    languageSelect.value = settings.language;
-    updateUIText();
-    updateMessageInputPlaceholder();
-    updateSendBtnTitle();
-
     // Update theme status
     updateThemeStatus();
 }
@@ -158,8 +126,6 @@ function applySettings() {
 function updateUIText() {
     const str = strings[settings.language];
     document.getElementById('settings-title').textContent = str.settingsTitle;
-    document.getElementById('lang-label').textContent = str.langLabel;
-    document.getElementById('lang-info').textContent = str.langInfo;
     document.getElementById('theme-label').textContent = str.themeLabel;
     document.getElementById('theme-info').textContent = str.themeInfo;
 }
@@ -238,7 +204,7 @@ async function handleSendMessage(e) {
         
     } catch (error) {
         removeLastMessage();
-        addErrorMessage('ত্রুটি: ' + error.message);
+        addErrorMessage('Error: ' + error.message);
     } finally {
         isLoading = false;
         updateSendButton();
@@ -263,7 +229,7 @@ function addMessage(role, content, sources) {
         
         let sourcesHTML = '<strong>' + strings[settings.language].sources + '</strong><br>';
         sources.slice(0, 2).forEach(source => {
-            sourcesHTML += `<div>• ${source.article || 'অনুচ্ছেদ'}</div>`;
+            sourcesHTML += `<div>• ${source.article || 'Article'}</div>`;
         });
         if (sources.length > 2) {
             sourcesHTML += `<div style="color: #0084ff; cursor: pointer;">${strings[settings.language].moreSource} ${sources.length - 2}</div>`;
