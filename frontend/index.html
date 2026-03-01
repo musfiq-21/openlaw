@@ -15,8 +15,8 @@
                 <h1><span class="logo-icon"><img src="logo.svg" alt="OpenLaw Logo"></span>OpenLaw</h1>
             </div>
             <div class="header-buttons">
-                <button class="icon-btn" onclick="toggleSettings()" title="Settings">
-                    <i class="fas fa-sliders-h"></i>
+                <button class="icon-btn" id="dark-mode-btn" onclick="toggleDarkMode()" title="Dark Mode">
+                    <i class="fas fa-moon"></i>
                 </button>
             </div>
         </div>
@@ -35,31 +35,6 @@
                     ↑
                 </button>
             </form>
-        </div>
-    </div>
-
-    <!-- Settings Panel -->
-    <div id="settings-panel">
-        <div class="settings-header">
-            <h2 id="settings-title">⚙️ Settings</h2>
-            <button class="settings-close" onclick="toggleSettings()" title="Close settings">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-
-        <div class="settings-content">
-            <!-- Dark Mode -->
-            <div class="setting-group">
-                <label class="setting-label" id="theme-label">Dark Mode</label>
-                <div class="toggle-switch">
-                    <label class="switch">
-                        <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode()" title="Toggle dark mode">
-                        <span class="slider"></span>
-                    </label>
-                    <span id="theme-status">Off</span>
-                </div>
-                <div class="setting-info" id="theme-info">Use dark theme for comfortable viewing</div>
-            </div>
         </div>
     </div>
 

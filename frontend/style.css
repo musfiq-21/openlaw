@@ -135,6 +135,15 @@ body.dark-mode .logo-icon {
     display: flex;
     margin-bottom: 16px;
     animation: slideIn 0.3s ease-in;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.message-wrapper {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    flex: 1;
 }
 
 @keyframes slideIn {
@@ -152,8 +161,113 @@ body.dark-mode .logo-icon {
     justify-content: flex-end;
 }
 
+.message.user .message-wrapper {
+    flex-direction: row-reverse;
+}
+
 .message.assistant {
     justify-content: flex-start;
+}
+
+.message-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.message:hover .message-actions {
+    opacity: 1;
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: scale(1.1);
+}
+
+.edited-indicator {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-left: 4px;
+}
+
+.edit-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+    width: 100%;
+}
+
+.edit-textarea {
+    padding: 12px 16px;
+    border: 2px solid var(--primary-color);
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 15px;
+    resize: vertical;
+    min-height: 60px;
+    max-height: 200px;
+    outline: none;
+    line-height: 1.5;
+}
+
+.edit-textarea:focus {
+    box-shadow: 0 0 0 3px rgba(0, 132, 255, 0.15);
+}
+
+.edit-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.edit-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.save-btn {
+    background: var(--primary-color);
+    color: white;
+}
+
+.save-btn:hover {
+    background: #0066cc;
+    transform: translateY(-1px);
+}
+
+.cancel-btn {
+    background: var(--border-color);
+    color: var(--text-primary);
+}
+
+.cancel-btn:hover {
+    background: var(--text-secondary);
+    color: white;
 }
 
 .message-content {

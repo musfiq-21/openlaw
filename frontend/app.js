@@ -31,19 +31,25 @@ const settings = {
     darkMode: false
 };
 
-// DOM Elements
-const messagesContainer = document.getElementById('messages');
-const messageInput = document.getElementById('message-input');
-const sendBtn = document.getElementById('send-btn');
-const inputForm = document.getElementById('input-form');
-const settingsPanel = document.getElementById('settings-panel');
-const darkModeToggle = document.getElementById('dark-mode-toggle');
+// DOM Elements (will be set in DOMContentLoaded)
+let messagesContainer;
+let messageInput;
+let sendBtn;
+let inputForm;
+let darkModeBtn;
 
 // State
 let isLoading = false;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    // Set DOM elements
+    messagesContainer = document.getElementById('messages');
+    messageInput = document.getElementById('message-input');
+    sendBtn = document.getElementById('send-btn');
+    inputForm = document.getElementById('input-form');
+    darkModeBtn = document.getElementById('dark-mode-btn');
+    
     loadSettings();
     setupEventListeners();
     checkHealth();
@@ -81,8 +87,8 @@ function setupEventListeners() {
 
     // Close settings on escape
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && settingsPanel.classList.contains('open')) {
-            toggleSettings();
+        if (e.key === 'Escape') {
+            // Settings panel removed
         }
     });
 }
@@ -107,36 +113,17 @@ function toggleSettings() {
 // Language change function removed - English only
 
 function toggleDarkMode() {
-    settings.darkMode = darkModeToggle.checked;
+    settings.darkMode = !settings.darkMode;
     saveSettings();
     applyDarkMode();
-    updateThemeStatus();
+    updateDarkModeIcon();
 }
 
 
 function applySettings() {
     // Apply dark mode
-    darkModeToggle.checked = settings.darkMode;
     applyDarkMode();
-
-    // Update theme status
-    updateThemeStatus();
-}
-
-function updateUIText() {
-    const str = strings[settings.language];
-    document.getElementById('settings-title').textContent = str.settingsTitle;
-    document.getElementById('theme-label').textContent = str.themeLabel;
-    document.getElementById('theme-info').textContent = str.themeInfo;
-}
-
-function updateMessageInputPlaceholder() {
-    messageInput.placeholder = strings[settings.language].inputPlaceholder;
-}
-
-function updateSendBtnTitle() {
-    const sendBtn = document.getElementById('send-btn');
-    sendBtn.title = strings[settings.language].sendBtnTitle;
+    updateDarkModeIcon();
 }
 
 function applyDarkMode() {
@@ -147,10 +134,13 @@ function applyDarkMode() {
     }
 }
 
-function updateThemeStatus() {
-    document.getElementById('theme-status').textContent = settings.darkMode 
-        ? strings[settings.language].themeOn 
-        : strings[settings.language].themeOff;
+function updateDarkModeIcon() {
+    const icon = darkModeBtn.querySelector('i');
+    if (settings.darkMode) {
+        icon.className = 'fas fa-sun';
+    } else {
+        icon.className = 'fas fa-moon';
+    }
 }
 
 
@@ -216,11 +206,40 @@ function addMessage(role, content, sources) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${role}`;
     
+    const messageWrapperDiv = document.createElement('div');
+    messageWrapperDiv.className = 'message-wrapper';
+    
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
     contentDiv.innerHTML = content;
     
-    messageDiv.appendChild(contentDiv);
+    messageWrapperDiv.appendChild(contentDiv);
+    
+    // Add action buttons for user and assistant messages
+    if (role === 'user' || role === 'assistant') {
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'message-actions';
+        
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'action-btn';
+        copyBtn.title = 'Copy message';
+        copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+        copyBtn.onclick = () => copyMessage(contentDiv.innerText);
+        
+        if (role === 'user') {
+            const editBtn = document.createElement('button');
+            editBtn.className = 'action-btn';
+            editBtn.title = 'Edit message';
+            editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+            editBtn.onclick = () => editMessage(messageWrapperDiv, contentDiv, content);
+            actionsDiv.appendChild(editBtn);
+        }
+        
+        actionsDiv.appendChild(copyBtn);
+        messageWrapperDiv.appendChild(actionsDiv);
+    }
+    
+    messageDiv.appendChild(messageWrapperDiv);
     
     // Add sources if present
     if (sources && sources.length > 0) {
@@ -268,4 +287,85 @@ function scrollToBottom() {
     setTimeout(() => {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }, 0);
+}
+
+function copyMessage(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Message copied to clipboard!');
+    }).catch(() => {
+        alert('Failed to copy message');
+    });
+}
+
+function editMessage(wrapper, contentDiv, originalContent) {
+    // Check if already in edit mode
+    if (wrapper.classList.contains('editing')) return;
+    
+    wrapper.classList.add('editing');
+    const originalText = contentDiv.innerText;
+    
+    // Create editing container
+    const editContainer = document.createElement('div');
+    editContainer.className = 'edit-container';
+    
+    // Create textarea
+    const textarea = document.createElement('textarea');
+    textarea.className = 'edit-textarea';
+    textarea.value = originalText;
+    textarea.focus();
+    
+    // Prevent Shift+Enter from sending when editing
+    textarea.addEventListener('keydown', (e) => {
+        e.stopPropagation();
+    });
+    
+    // Create buttons container
+    const buttonsDiv = document.createElement('div');
+    buttonsDiv.className = 'edit-buttons';
+    
+    const saveBtn = document.createElement('button');
+    saveBtn.type = 'button';
+    saveBtn.className = 'edit-btn save-btn';
+    saveBtn.textContent = 'Send';
+    saveBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const newText = textarea.value.trim();
+        if (newText && newText !== originalText) {
+            contentDiv.innerHTML = newText;
+            
+            // Add edited indicator if not already present
+            if (!contentDiv.querySelector('.edited-indicator')) {
+                const editedSpan = document.createElement('span');
+                editedSpan.className = 'edited-indicator';
+                editedSpan.textContent = ' (edited)';
+                contentDiv.appendChild(editedSpan);
+            }
+        }
+        editContainer.remove();
+        contentDiv.style.display = 'block';
+        wrapper.classList.remove('editing');
+        return false;
+    });
+    
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'edit-btn cancel-btn';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        editContainer.remove();
+        contentDiv.style.display = 'block';
+        wrapper.classList.remove('editing');
+        return false;
+    });
+    
+    buttonsDiv.appendChild(saveBtn);
+    buttonsDiv.appendChild(cancelBtn);
+    editContainer.appendChild(textarea);
+    editContainer.appendChild(buttonsDiv);
+    
+    contentDiv.parentNode.insertBefore(editContainer, contentDiv.nextSibling);
+    contentDiv.style.display = 'none';
 }
